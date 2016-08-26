@@ -1,4 +1,4 @@
-### UDP frame fragment repeater test setup
+# UDP frame fragment repeater test setup
 
 These 2 python are the UDP frame fragment streaming setup. The frames are the same size as the kinect depth images so this setup should represent the same network usage/bandwidth as the eventual unreal engine - kinect setup.
 
