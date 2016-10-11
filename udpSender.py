@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     HOST, PORT = socket.gethostbyname(args.host), args.port
     image = np.ones(image_size, np.dtype(np.uint16))
-    display_image = np.zeros(image_size, np.dtype(np.uint16))
+    display_image = np.zeros(image_size, np.dtype(np.uint16))+128
     data = image.data[:image.nbytes]
 
     # SOCK_DGRAM is the socket type to use for UDP sockets
@@ -61,8 +61,9 @@ if __name__ == "__main__":
     while True:
         received = sock.recv(packet_size)
         current_frame_time = struct.unpack('d',received[:8])[0]
-        idx = struct.unpack('i',received[8:12])[0]
-        image
+        idx = struct.unpack('i',received[8:16])[0]
+        write_offset = idx*content_size
+        display_image.data[write_offset:write_offset + content_size] = received[16:packet_size]
 
 
         #print "Got fragment {} from frame {}".format(idx, current_frame_time)
@@ -72,6 +73,7 @@ if __name__ == "__main__":
         if current_frame_time != prev_frame_time:
             print "Got full frame in {} seconds and lost {} fragment".format(time.time()-startt, number_of_fragments-fragment_count)
             fragment_count = 0
+            imgplotter.set_data(display_image)
             startt = time.time()
 
         prev_frame_time = current_frame_time
