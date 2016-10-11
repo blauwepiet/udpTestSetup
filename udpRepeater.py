@@ -7,7 +7,7 @@ import argparse
 import socket
 
 packet_size = 4096
-header_size = 8 + 4 # double for time frame integer for location
+header_size = 8 + 4 + 4  # double for time frame integer for location + padding
 content_size = packet_size - header_size
 
 class MyUDPHandler(SocketServer.BaseRequestHandler):

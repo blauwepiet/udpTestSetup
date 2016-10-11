@@ -6,6 +6,7 @@ import threading
 import struct
 import argparse
 import math
+from matplotlib import pyplot as plt
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""Simple UDP frame sender. Repeatedly ends and image the same size as the depth image of a kinect (512x424) in fra
@@ -14,17 +15,18 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", help="The port of the server", required=True, type=int)
     args = parser.parse_args()
 
-    image_size = (512,424)
+    image_size = (512,424,3)
 
     HOST, PORT = socket.gethostbyname(args.host), args.port
     image = np.ones(image_size, np.dtype(np.uint16))
+    display_image = np.zeros(image_size, np.dtype(np.uint16))
     data = image.data[:image.nbytes]
 
     # SOCK_DGRAM is the socket type to use for UDP sockets
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     packet_size = 4096
-    header_size = 8 + 4 # double for time frame integer for location
+    header_size = 8 + 4 + 4 # double for time frame integer for location and integer for padding (then 3x2 bytes per pixel is whole)
     content_size = packet_size - header_size
 
     print "Start sending to {} port {}".format(HOST, PORT)
@@ -53,10 +55,15 @@ if __name__ == "__main__":
 
     number_of_fragments = math.ceil(len(data)/content_size)+1
 
+    plt.ion()
+    imgplotter = plt.imshow(display_image, interpolation='nearest')
+
     while True:
         received = sock.recv(packet_size)
         current_frame_time = struct.unpack('d',received[:8])[0]
         idx = struct.unpack('i',received[8:12])[0]
+        image
+
 
         #print "Got fragment {} from frame {}".format(idx, current_frame_time)
 
