@@ -21,7 +21,7 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 
         socket = self.request[1]
         image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint16)) + random.randrange(0,9)
-        socket.sendto(data[:header_size] + image.data[:image.nbytes], self.client_address)
+        socket.sendto(data[0:header_size] + image.data[:image.nbytes], self.client_address)
 
 
 if __name__ == "__main__":

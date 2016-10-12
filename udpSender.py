@@ -29,15 +29,18 @@ if __name__ == "__main__":
     header_size = 8 + 4 + 4 # double for time frame integer for location and integer for padding (then 3x2 bytes per pixel is whole)
     content_size = packet_size - header_size
 
+    header_padding = struct.pack('i', 0)
+
     print "Start sending to {} port {}".format(HOST, PORT)
 
     def sendData():
         while True:
             frame_time = time.time()
             header_frame_time = struct.pack('d',frame_time)
+            header_padding_frame_time = header_padding + header_frame_time
             for idx, a in enumerate([data[i:i + content_size] for i in xrange(0, len(data), content_size)]):  
                 time.sleep(0.0001) # crude way to prevent congestion
-                message = header_frame_time + struct.pack('i', idx) + a
+                message = header_padding_frame_time + struct.pack('i', idx) + a
                 sock.sendto(message, (HOST,PORT))
 
     t1 = threading.Thread(target=sendData)
@@ -60,10 +63,10 @@ if __name__ == "__main__":
 
     while True:
         received = sock.recv(packet_size)
-        current_frame_time = struct.unpack('d',received[:8])[0]
-        idx = struct.unpack('i',received[8:16])[0]
+        current_frame_time = struct.unpack('d',received[4:12])[0]
+        idx = struct.unpack('i',received[12:16])[0]
         write_offset = idx*content_size
-        display_image.data[write_offset:write_offset + content_size] = received[16:packet_size]
+        display_image.data[write_offset:write_offset + content_size] = received[16:16+content_size]
 
 
         #print "Got fragment {} from frame {}".format(idx, current_frame_time)
