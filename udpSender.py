@@ -24,6 +24,7 @@ if __name__ == "__main__":
 
     # SOCK_DGRAM is the socket type to use for UDP sockets
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('',PORT))
 
     packet_size = 4096
     header_size = 8 + 4 + 4 # double for time frame integer for location and integer for padding (then 3x2 bytes per pixel is whole)
@@ -58,8 +59,8 @@ if __name__ == "__main__":
 
     number_of_fragments = math.ceil(len(data)/content_size)+1
 
-    plt.ion()
-    imgplotter = plt.imshow(display_image, interpolation='nearest')
+    #plt.ion()
+    #imgplotter = plt.imshow(display_image, interpolation='nearest')
 
     while True:
         received = sock.recv(packet_size)
@@ -76,7 +77,7 @@ if __name__ == "__main__":
         if current_frame_time != prev_frame_time:
             print "Got full frame in {} seconds and lost {} fragment".format(time.time()-startt, number_of_fragments-fragment_count)
             fragment_count = 0
-            imgplotter.set_data(display_image)
+            #imgplotter.set_data(display_image)
             startt = time.time()
 
         prev_frame_time = current_frame_time
