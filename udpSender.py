@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", help="The port of the server", required=True, type=int)
     args = parser.parse_args()
 
-    image_size = (512,424,3)
+    image_size = (512,424,4)
 
     HOST, PORT = socket.gethostbyname(args.host), args.port
     image = np.ones(image_size, np.dtype(np.uint16))
@@ -24,14 +24,19 @@ if __name__ == "__main__":
 
     # SOCK_DGRAM is the socket type to use for UDP sockets
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('',PORT))
 
     packet_size = 4096
-    header_size = 8 + 4 + 4 # double for time frame integer for location and integer for padding (then 3x2 bytes per pixel is whole)
+    header_size = 8 + 4 # double for time frame integer for location and integer for padding (then 3x2 bytes per pixel is whole)
     content_size = packet_size - header_size
 
     header_padding = struct.pack('i', 0)
 
+    number_of_fragments = math.ceil(len(data)/content_size)+1
+
     print "Start sending to {} port {}".format(HOST, PORT)
+
+    print "Gonna send {} bytes per frame in {} fragments".format(image.nbytes, number_of_fragments)
 
     def sendData():
         while True:
@@ -56,10 +61,10 @@ if __name__ == "__main__":
 
     fragment_count = 0
 
-    number_of_fragments = math.ceil(len(data)/content_size)+1
+    
 
-    plt.ion()
-    imgplotter = plt.imshow(display_image, interpolation='nearest')
+    #plt.ion()
+    #imgplotter = plt.imshow(display_image, interpolation='nearest')
 
     while True:
         received = sock.recv(packet_size)
@@ -69,14 +74,14 @@ if __name__ == "__main__":
         display_image.data[write_offset:write_offset + content_size] = received[16:16+content_size]
 
 
-        #print "Got fragment {} from frame {}".format(idx, current_frame_time)
+        print "Got fragment {} from frame {}".format(idx, current_frame_time)
 
         fragment_count += 1
 
         if current_frame_time != prev_frame_time:
-            print "Got full frame in {} seconds and lost {} fragment".format(time.time()-startt, number_of_fragments-fragment_count)
+            #print "Got full frame in {} seconds and lost {} fragment, and first 3 pixels look like {}".format(time.time()-startt, number_of_fragments-fragment_count, display_image[0])
             fragment_count = 0
-            imgplotter.set_data(display_image)
+            #imgplotter.set_data(display_image)
             startt = time.time()
 
         prev_frame_time = current_frame_time
