@@ -6,8 +6,8 @@ import struct
 import argparse
 import socket
 
-packet_size = 4096
-header_size = 8 + 4 + 4  # double for time frame integer for location + padding
+packet_size = 4096 
+header_size = 4 + 4  # double for time frame integer for location + padding
 content_size = packet_size - header_size
 
 class MyUDPHandler(SocketServer.BaseRequestHandler):
@@ -15,12 +15,13 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         data = self.request[0]
 
-        #frame_time = struct.unpack('d',data[:8])
-        #idx = struct.unpack('i',data[8:12])
-        #print 'Server received frame {}, idx {}, frame snippet {}'.format(frame_time, idx, np.frombuffer(data[header_size:header_size+10], np.dtype(np.uint16)))
+        frame_time = struct.unpack('f',data[:4])
+        idx = struct.unpack('i',data[4:8])
+        if idx[0] == 0: 
+		print 'Server received frame {}, idx {}, package size {}'.format(frame_time, idx, np.frombuffer(data[header_size:header_size+16], np.dtype(np.uint8)))
 
         socket = self.request[1]
-        image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint16)) + random.randrange(0,9)
+        image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint8))
         socket.sendto(data[0:header_size] + image.data[:image.nbytes], self.client_address)
 
 
