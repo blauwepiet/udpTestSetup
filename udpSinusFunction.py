@@ -10,6 +10,17 @@ packet_size = 8192
 header_size = 4 + 4  # double for time frame integer for location + padding
 content_size = packet_size - header_size
 
+image_size = (512,424,4)
+sinImage = np.zeros(image_size)
+amplitude = 10
+numberOfPeriods = 10
+
+for x in range(len(sinImage)):
+    for y in range(len(sinImage[x])):
+        sinImage[x][y] = np.sin((x/512.0)*2.0*np.pi*numberOfPeriods)*amplitude
+
+sinImage.shape = (sinImage.size)
+
 class MyUDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
@@ -21,7 +32,8 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 			print 'Server received frame {}, idx {}, package size {}'.format(frame_time, idx, np.frombuffer(data[header_size:header_size+16], np.dtype(np.uint8)))
 
         socket = self.request[1]
-        image = np.negative(np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint8)))
+        sinImageOffset = idx*content_size
+        image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint8)) + sinImage[sinImageOffset:sinImageOffset + content_size]
         socket.sendto(data[0:header_size] + image.data[:image.nbytes], self.client_address)
 
 
