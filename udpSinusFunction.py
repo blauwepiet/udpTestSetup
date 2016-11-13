@@ -10,17 +10,16 @@ packet_size = 8192
 header_size = 4 + 4  # double for time frame integer for location + padding
 content_size = packet_size - header_size
 
-image_size = (512,424,4)
+image_size = (180, 512,424,4)
 sinImage = np.zeros(image_size)
-amplitude = 20
-numberOfPeriods = 20
+amplitude = 30
+numberOfPeriods = 3
+for t in range(len(sinImage)):
+    for x in range(len(sinImage[t])):
+        sinImage[t][x] = (np.sin((x/512.0)*2.0*np.pi*numberOfPeriods + (t*np.pi/180))*amplitude)+amplitude
 
-for x in range(len(sinImage)):
-    for y in range(len(sinImage[x])):
-        sinImage[x][y] = (np.sin((x/512.0)*2.0*np.pi*numberOfPeriods)*amplitude)+amplitude
-
-sinImage.shape = (sinImage.size)
-sinImageSize = len(sinImage)
+sinImage.shape = (len(sinImage), sinImage[0].size)
+sinImageSize = len(sinImage[0])
 sinImage = sinImage.astype(np.uint8)
 
 class MyUDPHandler(SocketServer.BaseRequestHandler):
@@ -38,9 +37,9 @@ class MyUDPHandler(SocketServer.BaseRequestHandler):
 	
 	if (sinImageOffset + content_size)>sinImageSize:
 		residue = sinImageSize - sinImageOffset
-		image = np.frombuffer(data[header_size:header_size+residue], np.dtype(np.uint8)) + sinImage[sinImageOffset:sinImageOffset + residue]	
+		image = np.frombuffer(data[header_size:header_size+residue], np.dtype(np.uint8)) + sinImage[(int)((frame_time%1)*180)][sinImageOffset:sinImageOffset + residue]	
 	else:	
-	        image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint8)) + sinImage[sinImageOffset:sinImageOffset + content_size]
+	        image = np.frombuffer(data[header_size:header_size+content_size], np.dtype(np.uint8)) + sinImage[(int)((frame_time%1)*180)][sinImageOffset:sinImageOffset + content_size]
         socket.sendto(data[0:header_size] + image.data[:image.nbytes], self.client_address)
 
 
